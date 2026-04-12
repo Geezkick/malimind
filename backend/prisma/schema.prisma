@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  phone     String?
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  wallet         Wallet?
+  transactions   Transaction[]
+  goals          Goal[]
+  chamaMembers   ChamaMember[]
+  contributions  Contribution[]
+  aiInteractions AIInteraction[]
+  ownedChamas    Chama[]        @relation("ChamaOwner")
+}
+
+model Wallet {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  balance   Float    @default(0)
+  currency  String   @default("KES")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Transaction {
+  id        String          @id @default(uuid())
+  userId    String
+  type      TransactionType
+  amount    Float
+  category  String
+  note      String?
+  createdAt DateTime        @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Goal {
+  id            String    @id @default(uuid())
+  userId        String
+  title         String
+  targetAmount  Float
+  currentAmount Float     @default(0)
+  deadline      DateTime
+  emoji         String?   @default("🎯")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Chama {
+  id          String   @id @default(uuid())
+  name        String
+  ownerId     String
+  inviteCode  String   @unique
+  description String?
+  targetAmount Float?
+  frequency   String   @default("monthly")
+  createdAt   DateTime @default(now())
+
+  owner         User          @relation("ChamaOwner", fields: [ownerId], references: [id])
+  members       ChamaMember[]
+  contributions Contribution[]
+}
+
+model ChamaMember {
+  id       String @id @default(uuid())
+  userId   String
+  chamaId  String
+  joinedAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chama Chama @relation(fields: [chamaId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, chamaId])
+}
+
+model Contribution {
+  id        String   @id @default(uuid())
+  chamaId   String
+  userId    String
+  amount    Float
+  note      String?
+  createdAt DateTime @default(now())
+
+  chama Chama @relation(fields: [chamaId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Opportunity {
+  id          String   @id @default(uuid())
+  title       String
+  type        String
+  description String
+  link        String?
+  location    String?
+  salary      String?
+  company     String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+model AIInteraction {
+  id        String   @id @default(uuid())
+  userId    String
+  prompt    String
+  response  String
+  tokens    Int?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum TransactionType {
+  income
+  expense
+}
