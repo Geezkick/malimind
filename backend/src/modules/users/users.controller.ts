@@ -17,9 +17,15 @@ export class UsersController {
   }
 
   @Get('dashboard')
-  @ApiOperation({ summary: 'Get home dashboard data' })
+  @ApiOperation({ summary: 'Get main dashboard metrics' })
   getDashboard(@Request() req) {
     return this.usersService.getDashboard(req.user.id);
+  }
+
+  @Get('employer-dashboard')
+  @ApiOperation({ summary: 'Get employer-mode dashboard metrics' })
+  getEmployerDashboard(@Request() req) {
+    return this.usersService.getEmployerDashboard(req.user.id);
   }
 
   @Patch('profile')

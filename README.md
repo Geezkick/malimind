@@ -1,11 +1,18 @@
-# MaliMind AI - Kenya-first AI Super App
+# Malimind - The Elite AI Super App
 
 ## 🚀 Overview
-MaliMind is an AI-powered minimal MVP mobile app helping users manage money, save, run chamas, and get intelligent financial recommendations.
+Malimind is a high-fidelity **AI Intelligence Layer** and Financial Operator designed for the modern economy. It combines sovereign capital management, synergy circles, and proximity-based job marketplaces into a single, high-performance "Elite" experience.
+
+## 💎 Premium Features
+- **Elite Obsidian UI**: A Stripe-inspired, high-contrast dark theme with glassmorphism and smooth motion.
+- **Intelligence Layer**: Context-aware AI assistant for cash flow optimization and career growth.
+- **Synergy Circles**: Collaborative liquidity pools with real-time growth analytics.
+- **Proximity Marketplace**: Hyper-local job and talent matching with integrated hiring workflows.
 
 ## 🛠 Tech Stack
-- **Backend:** NestJS, Prisma, PostgreSQL, OpenAI
-- **Frontend:** React Native (Expo), TypeScript, Zustand, TailWind UI (NativeWind)
+- **Backend:** NestJS, Prisma, PostgreSQL, OpenAI (with Sovereign Data Protocols)
+- **Frontend:** React Native (Expo), TypeScript, Zustand, NativeWind (Obsidian Design System)
+- **Visuals**: Framer-style animations, SVG Data Curves, and Haptic Feedback.
 
 ---
 

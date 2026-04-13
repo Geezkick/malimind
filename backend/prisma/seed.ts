@@ -1,46 +1,88 @@
 import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('Seeding Database...');
 
-  // Opportunities / Gigs
-  const ops = [
+  // Demo User
+  const password = await bcrypt.hash('password123', 10);
+  
+  const user = await prisma.user.upsert({
+    where: { email: 'john@example.com' },
+    update: {},
+    create: {
+      name: 'John Doe',
+      email: 'john@example.com',
+      password,
+      wallet: {
+        create: {
+          balance: 154000,
+        }
+      },
+      goals: {
+        create: [
+          {
+            title: 'Macbook Pro',
+            targetAmount: 250000,
+            currentAmount: 150000,
+            emoji: '💻',
+            deadline: new Date('2026-12-31')
+          },
+          {
+             title: 'Emergency Fund',
+             targetAmount: 500000,
+             currentAmount: 125000,
+             emoji: '🏦',
+             deadline: new Date('2027-06-30')
+          }
+        ]
+      }
+    }
+  });
+
+  console.log('✅ Seeded User: john@example.com / password123');
+
+  // Gigs / Jobs
+  const jobs = [
     {
       title: 'Freelance Software Developer',
-      type: 'gig',
       description: 'Build a simple MVP for a startup. React Native and Node.js.',
-      link: 'https://upwork.com',
+      category: 'Development',
       location: 'Remote',
-      salary: 'KES 50,000 - 100,000',
-      company: 'Tech Startup X',
+      budget: 75000,
+      employerId: user.id,
     },
     {
       title: 'Delivery Rider',
-      type: 'job',
       description: 'Full-time delivery rider around Nairobi CBD.',
-      link: 'https://glovoapp.com',
+      category: 'Logistics',
       location: 'Nairobi',
-      salary: 'KES 25,000/month',
-      company: 'Glovo',
+      budget: 25000,
+      employerId: user.id,
     },
     {
-      title: 'Data Entry Clerk',
-      type: 'gig',
-      description: 'Short-term data entry for historical records. 2 weeks.',
-      link: 'https://fiverr.com',
+      title: 'Graphic Designer',
+      description: 'Create a logo and branding for a new fintech app.',
+      category: 'Design',
       location: 'Remote',
-      salary: 'KES 15,000',
-      company: 'Research Inst.',
+      budget: 15000,
+      employerId: user.id,
     },
   ];
 
-  for (const op of ops) {
-    await prisma.opportunity.create({ data: op });
+  // Try to clear jobs - but wrap in try/catch in case model isn't generated yet or table doesn't exist
+  try {
+     await (prisma as any).job.deleteMany();
+     console.log('Cleared old jobs');
+  } catch(e) {}
+
+  for (const job of jobs) {
+    await (prisma as any).job.create({ data: job });
   }
 
-  console.log('✅ Seeded Opportunities');
+  console.log('✅ Seeded Jobs');
 }
 
 main()

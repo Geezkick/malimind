@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>malimind UI Design Board</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#16C784',
+                        navy: '#0B1B2B',
+                        bgmain: '#F5F7FA',
+                        cardbg: '#FFFFFF',
+                        border: '#E5E7EB',
+                        textsec: '#6B7280'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(11, 27, 43, 0.08)',
+                        'card': '0 12px 30px -4px rgba(11, 27, 43, 0.05)',
+                        'btn': '0 4px 14px 0 rgba(22, 199, 132, 0.25)',
+                    },
+                    borderRadius: {
+                        'md': '12px',
+                        'lg': '16px',
+                        'xl': '24px',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #E5E7EB; }
+        .canvas-bg { background-color: #FFFFFF; }
+        ::-webkit-scrollbar { height: 8px; width: 8px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body class="antialiased min-h-screen p-8 text-navy font-sans overflow-x-auto">
+
+    <!-- Outermost wrapper to hold everything in a clean canvas -->
+    <div class="canvas-bg min-w-max p-12 rounded-xl shadow-lg border border-gray-200 flex gap-12 items-start mx-auto w-max">
+
+        <!-- ========================================== -->
+        <!-- DESIGN SYSTEM & COMPONENTS (LEFT PANEL)    -->
+        <!-- ========================================== -->
+        <div class="w-[380px] bg-bgmain rounded-lg p-6 shadow-soft flex flex-col gap-8 border border-border">
+            
+            <div class="bg-cardbg p-6 rounded-lg shadow-card border border-border">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-10 h-10 bg-primary rounded-md flex items-center justify-center text-white text-lg shadow-btn">🧠</div>
+                    <h1 class="text-2xl font-black tracking-tight">malimind</h1>
+                </div>
+                <p class="text-textsec text-sm font-medium">Design System & UI Components</p>
+            </div>
+
+            <!-- Typography & Colors -->
+            <div class="bg-cardbg p-6 rounded-lg shadow-card border border-border flex flex-col gap-6">
+                <div>
+                    <h2 class="text-xs uppercase tracking-widest text-textsec font-bold mb-4">Typography</h2>
+                    <div class="flex flex-col gap-3">
+                        <div class="flex flex-col"><span class="text-[28px] font-bold leading-none">Header 1</span><span class="text-xs text-textsec">28px Bold</span></div>
+                        <div class="flex flex-col"><span class="text-[22px] font-semibold leading-tight">Header 2</span><span class="text-xs text-textsec">22px SemiBold</span></div>
+                        <div class="flex flex-col"><span class="text-[16px] font-normal">Body Content</span><span class="text-xs text-textsec">16px Regular</span></div>
+                    </div>
+                </div>
+                
+                <div class="w-full h-[1px] bg-border"></div>
+
+                <div>
+                    <h2 class="text-xs uppercase tracking-widest text-textsec font-bold mb-4">Colors</h2>
+                    <div class="flex gap-3">
+                        <div class="w-12 h-12 rounded-md bg-primary shadow-soft flex items-center justify-center text-[10px] text-white font-bold">Pri</div>
+                        <div class="w-12 h-12 rounded-md bg-navy shadow-soft flex items-center justify-center text-[10px] text-white font-bold">Nav</div>
+                        <div class="w-12 h-12 rounded-md bg-bgmain border border-border flex items-center justify-center text-[10px] text-navy font-bold">Bg</div>
+                        <div class="w-12 h-12 rounded-md bg-cardbg border border-border flex items-center justify-center text-[10px] text-navy font-bold">Card</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Components Container -->
+            <div class="bg-cardbg p-6 rounded-lg shadow-card border border-border flex flex-col gap-6">
+                <h2 class="text-xs uppercase tracking-widest text-textsec font-bold mb-2">Components</h2>
+                
+                <!-- Input -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-[14px] font-semibold text-navy">Email address</label>
+                    <input type="email" placeholder="brian@example.com" class="h-[48px] w-full bg-cardbg border border-border rounded-md px-[12px] text-[16px] text-navy focus:outline-none focus:border-primary transition-colors">
+                </div>
+
+                <!-- Primary Button -->
+                <button class="h-[48px] w-full bg-primary rounded-md text-white font-medium text-[16px] shadow-btn hover:opacity-90 transition-opacity">
+                    Action Button
+                </button>
+
+                <!-- Progress Pill -->
+                <div class="bg-bgmain p-4 rounded-md border border-border flex flex-col gap-3 mt-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold">Goal Progress</span>
+                        <span class="text-sm font-bold text-primary">65%</span>
+                    </div>
+                    <div class="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                        <div class="h-full bg-primary rounded-full w-[65%]"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+        <!-- ========================================== -->
+        <!-- CENTER PANEL: WEB APP DESKTOP VIEWS        -->
+        <!-- ========================================== -->
+        <div class="flex flex-col gap-12 shrink-0">
+            
+            <!-- VIEW 1: LOGIN -->
+            <div class="w-[1024px] h-[640px] bg-bgmain rounded-xl shadow-card border border-border flex items-center justify-center relative overflow-hidden">
+                <!-- Background decor -->
+                <div class="absolute -top-32 -left-32 w-96 h-96 bg-primary opacity-5 rounded-full blur-3xl"></div>
+                <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-navy opacity-5 rounded-full blur-3xl"></div>
+
+                <!-- LOGIN CARD -->
+                <div class="w-[400px] bg-cardbg p-[32px] rounded-lg shadow-card border border-border z-10 flex flex-col gap-[16px]">
+                    <div class="flex flex-col items-center gap-4 mb-2">
+                        <div class="w-16 h-16 bg-primary rounded-lg flex items-center justify-center text-white text-3xl shadow-btn">🧠</div>
+                        <h1 class="text-[28px] font-black tracking-tight text-navy">malimind</h1>
+                    </div>
+                    
+                    <h2 class="text-[22px] font-semibold text-center mt-2 mb-2">Welcome back</h2>
+                    
+                    <div class="flex flex-col gap-2">
+                        <label class="text-[14px] font-semibold text-navy">Email address</label>
+                        <input type="email" value="brian@example.com" class="h-[48px] w-full bg-cardbg border border-border rounded-md px-[12px] text-[16px] text-navy focus:outline-none focus:border-primary transition-colors">
+                    </div>
+
+                    <div class="flex flex-col gap-2">
+                        <label class="text-[14px] font-semibold text-navy">Password</label>
+                        <input type="password" value="••••••••" class="h-[48px] w-full bg-cardbg border border-border rounded-md px-[12px] text-[16px] text-navy focus:outline-none focus:border-primary transition-colors">
+                    </div>
+
+                    <div class="mt-2 text-right">
+                        <a href="#" class="text-sm font-semibold text-textsec hover:text-navy">Forgot password?</a>
+                    </div>
+
+                    <button class="h-[48px] w-full bg-primary rounded-md text-white font-medium text-[16px] shadow-btn mt-2 hover:opacity-90 transition-opacity">
+                        Sign In
+                    </button>
+                    
+                    <button class="h-[48px] w-full bg-transparent border border-border rounded-md text-navy font-semibold text-[14px] mt-1 hover:bg-gray-50 transition-colors">
+                        Create an account
+                    </button>
+                </div>
+            </div>
+
+            <!-- VIEW 2: DASHBOARD -->
+            <div class="w-[1024px] h-[768px] bg-bgmain rounded-xl shadow-card border border-border flex overflow-hidden relative">
+                
+                <!-- Sidebar -->
+                <div class="w-[240px] bg-cardbg border-r border-border flex flex-col justify-between z-10">
+                    <div class="p-6">
+                        <div class="flex items-center gap-3 mb-10">
+                            <div class="w-8 h-8 bg-primary rounded-md flex items-center justify-center text-white text-xs shadow-btn">🧠</div>
+                            <h1 class="text-[22px] font-black tracking-tight">malimind</h1>
+                        </div>
+
+                        <div class="flex flex-col gap-3">
+                            <a href="#" class="flex items-center gap-3 bg-bgmain border border-border p-3 rounded-md text-navy font-semibold shadow-sm text-sm">
+                                <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                                Dashboard
+                            </a>
+                            <a href="#" class="flex items-center gap-3 bg-transparent p-3 rounded-md text-textsec hover:bg-bgmain font-medium transition-colors text-sm">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                Goals
+                            </a>
+                            <a href="#" class="flex items-center gap-3 bg-transparent p-3 rounded-md text-textsec hover:bg-bgmain font-medium transition-colors text-sm">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                Deals
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6">
+                        <div class="bg-bgmain border border-border p-4 rounded-md flex items-center gap-3 cursor-pointer hover:shadow-soft transition-shadow">
+                            <div class="w-10 h-10 bg-primary text-white font-bold rounded-full flex items-center justify-center">BR</div>
+                            <div class="flex-1">
+                                <p class="text-sm font-semibold leading-tight">Brian R.</p>
+                                <p class="text-xs text-textsec">View Profile</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Content -->
+                <div class="flex-1 p-[40px] overflow-y-auto">
+                    
+                    <div class="flex justify-between items-center mb-[32px]">
+                        <div>
+                            <h1 class="text-[28px] font-black tracking-tight leading-none mb-2">Overview</h1>
+                            <p class="text-textsec text-[16px]">Here's what is happening with your money today.</p>
+                        </div>
+                        <button class="bg-cardbg border border-border px-[20px] py-[12px] rounded-md text-navy font-semibold text-[14px] shadow-sm flex items-center gap-2 hover:bg-gray-50">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            Log Transaction
+                        </button>
+                    </div>
+
+                    <!-- Top Grid -->
+                    <div class="grid grid-cols-3 gap-[24px] mb-[32px]">
+                        
+                        <!-- HERO BALANCE CARD -->
+                        <div class="col-span-2 bg-navy rounded-lg p-[32px] shadow-card relative overflow-hidden flex flex-col justify-between border border-[#1a334d]">
+                            <div class="absolute top-0 right-0 w-64 h-64 bg-primary rounded-full blur-[80px] opacity-20 -mr-16 -mt-16"></div>
+                            
+                            <div class="z-10">
+                                <h2 class="text-textsec text-[14px] font-bold uppercase tracking-widest mb-4">Total Balance</h2>
+                                <p class="text-white text-[48px] font-black tracking-tight leading-none">KES 154,000</p>
+                            </div>
+
+                            <div class="z-10 flex gap-4 mt-8">
+                                <div class="bg-white/10 border border-white/5 backdrop-blur-md px-4 py-2 rounded-md">
+                                    <p class="text-white/60 text-xs font-semibold mb-1 uppercase tracking-wider">Safe to spend</p>
+                                    <p class="text-primary font-bold text-lg">KES 1,200</p>
+                                </div>
+                                <div class="bg-white/10 border border-white/5 backdrop-blur-md px-4 py-2 rounded-md">
+                                    <p class="text-white/60 text-xs font-semibold mb-1 uppercase tracking-wider">Monthly Income</p>
+                                    <p class="text-white font-bold text-lg">KES 240,500</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AI INSIGHT CARD -->
+                        <div class="col-span-1 bg-cardbg rounded-lg p-[24px] shadow-card border border-border flex flex-col">
+                            <div class="w-12 h-12 bg-[#ecfdf5] border border-[#d1fae5] rounded-md flex items-center justify-center text-primary mb-4">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            </div>
+                            <h3 class="text-[16px] font-bold mb-2">Smart Insight</h3>
+                            <div class="bg-bgmain p-4 rounded-md border border-border flex-1 mb-4">
+                                <p class="text-[14px] text-navy font-medium leading-relaxed">You saved <span class="font-bold text-primary">15% more</span> this week on food. You can safely allocate KES 3,000 to your Emergency Fund now.</p>
+                            </div>
+                            <button class="text-primary text-[14px] font-bold text-left hover:underline">Apply saving &rarr;</button>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Grid -->
+                    <div class="grid grid-cols-2 gap-[24px]">
+                        
+                        <!-- GOALS CARD -->
+                        <div class="bg-cardbg border border-border rounded-lg p-[24px] shadow-card">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="text-[18px] font-black tracking-tight">Active Goals</h3>
+                                <button class="text-[14px] font-semibold text-primary">View All</button>
+                            </div>
+
+                            <div class="flex flex-col gap-4">
+                                <!-- Goal 1 -->
+                                <div class="bg-bgmain border border-border p-4 rounded-md">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 bg-cardbg border border-border rounded-md flex items-center justify-center text-lg shadow-sm">💻</div>
+                                            <div>
+                                                <p class="font-bold text-[14px]">Macbook Pro M3</p>
+                                                <p class="text-[12px] text-textsec">KES 150K / 250K</p>
+                                            </div>
+                                        </div>
+                                        <span class="text-[14px] font-bold text-primary">60%</span>
+                                    </div>
+                                    <div class="h-[8px] w-full bg-gray-200 rounded-full overflow-hidden">
+                                        <div class="h-full bg-primary rounded-full w-[60%]"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Goal 2 -->
+                                <div class="bg-bgmain border border-border p-4 rounded-md">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 bg-cardbg border border-border rounded-md flex items-center justify-center text-lg shadow-sm">🏦</div>
+                                            <div>
+                                                <p class="font-bold text-[14px]">Emergency Fund</p>
+                                                <p class="text-[12px] text-textsec">KES 125K / 500K</p>
+                                            </div>
+                                        </div>
+                                        <span class="text-[14px] font-bold text-primary">25%</span>
+                                    </div>
+                                    <div class="h-[8px] w-full bg-gray-200 rounded-full overflow-hidden">
+                                        <div class="h-full bg-primary rounded-full w-[25%] opacity-80"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- QUICK ACTIONS / RECENT TX -->
+                        <div class="bg-cardbg border border-border rounded-lg p-[24px] shadow-card">
+                            <h3 class="text-[18px] font-black tracking-tight mb-6">Recent Activity</h3>
+                            
+                            <div class="flex flex-col gap-4">
+                                <div class="bg-bgmain border border-border p-4 rounded-md flex justify-between items-center">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-10 h-10 bg-red-50 border border-red-100 rounded-md flex items-center justify-center text-red-500">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                        </div>
+                                        <div>
+                                            <p class="text-[14px] font-bold">Pizza Inn</p>
+                                            <p class="text-[12px] text-textsec">Food & Dining</p>
+                                        </div>
+                                    </div>
+                                    <span class="font-bold text-[14px] text-navy">- KES 1,800</span>
+                                </div>
+
+                                <div class="bg-bgmain border border-border p-4 rounded-md flex justify-between items-center">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-10 h-10 bg-[#ecfdf5] border border-[#d1fae5] rounded-md flex items-center justify-center text-primary">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                        </div>
+                                        <div>
+                                            <p class="text-[14px] font-bold">Freelance Web Design</p>
+                                            <p class="text-[12px] text-textsec">Income</p>
+                                        </div>
+                                    </div>
+                                    <span class="font-bold text-[14px] text-primary">+ KES 25,000</span>
+                                </div>
+
+                                <div class="bg-bgmain border border-border p-4 rounded-md flex justify-between items-center">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-10 h-10 bg-red-50 border border-red-100 rounded-md flex items-center justify-center text-red-500">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                        </div>
+                                        <div>
+                                            <p class="text-[14px] font-bold">Netflix Subscription</p>
+                                            <p class="text-[12px] text-textsec">Entertainment</p>
+                                        </div>
+                                    </div>
+                                    <span class="font-bold text-[14px] text-navy">- KES 1,200</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

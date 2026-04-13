@@ -38,9 +38,8 @@ export class UsersService {
     const totalGoalRemaining = goals.reduce(
       (acc, g) => acc + (g.targetAmount - g.currentAmount), 0,
     );
-    const daysLeft = goals.length > 0
-      ? Math.max(1, Math.ceil((new Date(goals[0].deadline).getTime() - Date.now()) / 86400000))
-      : 30;
+    const firstDeadline = goals.length > 0 ? new Date(goals[0].deadline).getTime() : Date.now() + 30 * 86400000;
+    const daysLeft = Math.max(1, Math.ceil((firstDeadline - Date.now()) / 86400000));
     const safeToSpend = Math.max(0, ((wallet?.balance || 0) - totalGoalRemaining) / daysLeft);
 
     return {
@@ -49,6 +48,27 @@ export class UsersService {
       safeToSpend: Math.round(safeToSpend),
       goals,
       recentTransactions: recentTx,
+    };
+  }
+
+  async getEmployerDashboard(userId: string) {
+    const wallet = await this.prisma.wallet.findUnique({ where: { userId } });
+    const activeJobs = await this.prisma.job.findMany({
+      where: { employerId: userId, status: 'open' },
+      include: { _count: { select: { applications: true } } }
+    });
+
+    return {
+      balance: (wallet?.balance || 0) * 1.5, // Simulating business budget
+      spent: (wallet?.balance || 0) * 0.2,
+      activeJobs: activeJobs.map(j => ({
+        id: j.id,
+        title: j.title,
+        applicants: j._count.applications,
+        budget: j.budget,
+        emoji: '📋'
+      })),
+      recentTransactions: [],
     };
   }
 }
