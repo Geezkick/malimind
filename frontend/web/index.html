@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <title>MaliMind AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet" />
+  <style id="expo-reset">
+    /* Reset for react-native-web */
+    html {
+      height: 100%;
+      background: #050505;
+    }
+    body {
+      min-height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      display: flex;
+    }
+
+    #root {
+      display: flex;
+      height: 100%;
+      flex: 1;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    /* Phone Frame Styles applied only on larger screens */
+    @media (min-width: 800px) {
+      body {
+        padding: 30px;
+        justify-content: flex-start;
+        align-items: center;
+        overflow: auto;
+        min-height: 100vh;
+        background-color: #0A0A0B;
+        background-image: 
+          radial-gradient(circle at top right, rgba(167, 139, 250, 0.15), transparent 40%),
+          radial-gradient(circle at bottom left, rgba(167, 139, 250, 0.1), transparent 40%);
+      }
+
+      .phone-frame {
+        position: relative;
+        width: min(400px, 42vw);
+        height: min(850px, calc(100vh - 60px));
+        background: #000;
+        border-radius: 50px;
+        /* The bezel */
+        box-shadow: 
+          0 0 0 14px #101010, 
+          0 0 0 16px #2a2a2a, 
+          20px 20px 40px rgba(0,0,0,0.8);
+        flex-shrink: 0;
+        margin-left: 20px;
+      }
+
+      /* Fake dynamic island / notch */
+      .phone-frame::before {
+        content: '';
+        position: absolute;
+        top: 14px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 120px;
+        height: 35px;
+        background: #000;
+        border-radius: 20px;
+        z-index: 9999;
+        /* Adding camera lenses for realism */
+        box-shadow: inset -10px 0 10px rgba(255,255,255,0.05);
+      }
+      .phone-frame::after {
+        content: '';
+        position: absolute;
+        top: 24px;
+        left: calc(50% + 40px);
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: radial-gradient(circle at center, #111 0%, #333 100%);
+        z-index: 99999;
+      }
+
+      #root {
+        border-radius: 50px;
+        overflow: hidden;
+        height: 100%;
+        width: 100%;
+        position: relative;
+        z-index: 10;
+        background-color: #0A0A0B;
+        display: flex;
+        flex: 1;
+      }
+      
+      .desktop-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding-left: 8vw;
+        color: white;
+        flex: 1;
+      }
+      .desktop-info h1 {
+        font-size: 4rem;
+        font-weight: 800;
+        margin-bottom: 20px;
+        background: linear-gradient(to right, #ffffff, #a78bfa);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        line-height: 1.1;
+      }
+      .desktop-info p {
+        font-size: 1.25rem;
+        color: #9ca3af;
+        max-width: 500px;
+        line-height: 1.6;
+        margin-bottom: 30px;
+      }
+      
+      .features-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+      .features-list li {
+        display: flex;
+        align-items: center;
+        font-size: 1.1rem;
+        color: #d1d5db;
+      }
+      .features-list li::before {
+        content: "✓";
+        color: #a78bfa;
+        font-weight: bold;
+        margin-right: 12px;
+        font-size: 1.2rem;
+      }
+    }
+
+    /* Full screen on mobile / typical default */
+    @media (max-width: 799px) {
+      .phone-frame {
+        width: 100%;
+        height: 100%;
+        flex: 1;
+        display: flex;
+      }
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+      .desktop-info {
+        display: none;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="/tailwind.css" />
+  <%- css %>
+</head>
+
+<body>
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <div class="phone-frame">
+    <div id="root"></div>
+  </div>
+  <div class="desktop-info">
+    <h1>Experience MaliMind</h1>
+    <p>Interact with the AI-first fintech platform in this live mobile simulation. See how it functions natively.</p>
+    <ul class="features-list">
+      <li>Intelligent Automation</li>
+      <li>Real-time financial insights</li>
+      <li>Sovereign AI assistance</li>
+    </ul>
+  </div>
+  <%- script %>
+</body>
+
+</html>

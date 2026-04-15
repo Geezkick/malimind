@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TouchableOpacity, Text, TouchableOpacityProps, Platform, StyleProp, ViewStyle, View, Animated } from 'react-native';
+import { TouchableOpacity, Text, TouchableOpacityProps, Platform, StyleProp, ViewStyle, View, Animated, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 
@@ -9,22 +9,26 @@ interface MaliButtonProps extends TouchableOpacityProps {
   className?: string;
   textClassName?: string;
   style?: StyleProp<ViewStyle>;
+  loading?: boolean;
 }
 
-export const MaliButton: React.FC<MaliButtonProps> = ({ 
-  title, 
-  variant = 'primary', 
-  className = '', 
+export const MaliButton: React.FC<MaliButtonProps> = ({
+  title,
+  variant = 'primary',
+  className = '',
   textClassName = '',
   style,
   onPress,
-  ...props 
+  loading = false,
+  disabled,
+  ...props
 }) => {
   const isWeb = Platform.OS === 'web';
   const [isHovered, setIsHovered] = useState(false);
   const [scale] = useState(new Animated.Value(1));
 
   const handlePressIn = () => {
+    if (loading || disabled) return;
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
@@ -46,48 +50,52 @@ export const MaliButton: React.FC<MaliButtonProps> = ({
   };
 
   const handlePress = (e: any) => {
+    if (loading || disabled) return;
     if (Platform.OS !== 'web') {
-       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
     if (onPress) onPress(e);
   };
 
-  const primaryGradient = isHovered 
-    ? ['#6D43FF', '#A78BFA'] 
+  const primaryGradient = isHovered
+    ? ['#6D43FF', '#A78BFA']
     : ['#5B2EFF', '#8B5CF6'];
 
   const baseClasses = "h-[60px] rounded-[18px] flex-row items-center justify-center transition-all duration-300";
-  
+
   const animatedStyle = {
     transform: [{ scale }]
   };
+
+  const isDisabled = loading || disabled;
 
   if (variant === 'primary' || variant === 'glow') {
     const isGlow = variant === 'glow';
     return (
       <Animated.View style={[{ height: 60 }, animatedStyle, style]}>
-        <TouchableOpacity 
+        <TouchableOpacity
           activeOpacity={1}
           onPress={handlePress}
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
+          disabled={isDisabled}
           //@ts-ignore
-          onMouseEnter={() => setIsHovered(true)}
+          onMouseEnter={() => !isDisabled && setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           style={[
-            { flex: 1 },
-             (isWeb ? { 
-               boxShadow: isHovered 
+            { flex: 1, opacity: isDisabled ? 0.6 : 1 },
+            (isWeb ? {
+              boxShadow: isHovered
                 ? (isGlow ? '0 0 50px rgba(91, 46, 255, 0.4)' : '0 10px 40px rgba(91, 46, 255, 0.4)')
                 : (isGlow ? '0 0 30px rgba(91, 46, 255, 0.2)' : '0 4px 12px rgba(91, 46, 255, 0.2)'),
-               cursor: 'pointer'
-             } : {
-                shadowColor: '#5B2EFF',
-                shadowOffset: { width: 0, height: 8 },
-                shadowOpacity: isGlow ? 0.4 : 0.2,
-                shadowRadius: 15,
-                elevation: 10,
-             }) as any
+              cursor: isDisabled ? 'default' : 'pointer'
+            } : {
+              shadowColor: '#5B2EFF',
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: isGlow ? 0.4 : 0.2,
+              shadowRadius: 15,
+              elevation: 10,
+            }) as any
           ]}
           {...props}
         >
@@ -98,23 +106,28 @@ export const MaliButton: React.FC<MaliButtonProps> = ({
             style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}
             className={className}
           >
-            {/* Shimmer Effect (Web Only Simulator) */}
-            {isWeb && isHovered && (
-                <View 
-                  pointerEvents="none"
-                  style={{
-                    position: 'absolute',
-                    top: 0, left: '-100%', width: '100%', height: '100%',
-                    backgroundColor: 'rgba(255,255,255,0.1)',
-                    transform: [{ skewX: '-20deg' }],
-                    //@ts-ignore
-                    animation: 'shimmer 1.5s infinite'
-                  }}
-                />
+            {loading ? (
+              <ActivityIndicator color="white" size="small" />
+            ) : (
+              <Text className={`text-white font-black text-[15px] uppercase tracking-[1px] ${textClassName}`}>
+                {title}
+              </Text>
             )}
-            <Text className={`text-white font-black text-[15px] uppercase tracking-[1px] ${textClassName}`}>
-              {title}
-            </Text>
+
+            {/* Shimmer Effect (Web Only Simulator) */}
+            {isWeb && isHovered && !isDisabled && (
+              <View
+                pointerEvents="none"
+                style={{
+                  position: 'absolute',
+                  top: 0, left: '-100%', width: '100%', height: '100%',
+                  backgroundColor: 'rgba(255,255,255,0.1)',
+                  transform: [{ skewX: '-20deg' }],
+                  //@ts-ignore
+                  animation: 'shimmer 1.5s infinite'
+                }}
+              />
+            )}
           </LinearGradient>
         </TouchableOpacity>
       </Animated.View>
@@ -123,33 +136,39 @@ export const MaliButton: React.FC<MaliButtonProps> = ({
 
   return (
     <Animated.View style={[animatedStyle, style]}>
-        <TouchableOpacity 
+      <TouchableOpacity
         activeOpacity={1}
         onPress={handlePress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
+        disabled={isDisabled}
         //@ts-ignore
-        onMouseEnter={() => setIsHovered(true)}
+        onMouseEnter={() => !isDisabled && setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         style={[
-            {
+          {
             backgroundColor: variant === 'glass' ? (isHovered ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)') : 'transparent',
             borderColor: isHovered ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)',
             borderWidth: 1,
-            },
-            (isWeb ? { 
+            opacity: isDisabled ? 0.5 : 1,
+          },
+          (isWeb ? {
             backdropFilter: variant === 'glass' ? 'blur(20px)' : 'none',
             WebkitBackdropFilter: variant === 'glass' ? 'blur(20px)' : 'none',
-            cursor: 'pointer',
-            } : {}) as any
+            cursor: isDisabled ? 'default' : 'pointer',
+          } : {}) as any
         ]}
         className={`${baseClasses} px-8 ${className}`}
         {...props}
-        >
-        <Text className={`text-obsidian-50 font-black text-[13px] uppercase tracking-[1px] ${textClassName}`}>
+      >
+        {loading ? (
+          <ActivityIndicator color="#5B2EFF" size="small" />
+        ) : (
+          <Text className={`text-obsidian-50 font-black text-[13px] uppercase tracking-[1px] ${textClassName}`}>
             {title}
-        </Text>
-        </TouchableOpacity>
+          </Text>
+        )}
+      </TouchableOpacity>
     </Animated.View>
   );
 };

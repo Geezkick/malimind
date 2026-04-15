@@ -1,263 +1,329 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Platform, StyleSheet, Animated } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '../api/client';
-import { useAuthStore } from '../store/authStore';
-import { MaliCard } from '../components/MaliCard';
-import { MaliButton } from '../components/MaliButton';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, ScrollView, RefreshControl, Animated, InteractionManager, TouchableOpacity, Dimensions } from 'react-native';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { io } from 'socket.io-client';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import { AddTransactionModal } from '../components/AddTransactionModal';
-import { AddGoalModal } from '../components/AddGoalModal';
+import { MaliCard } from '../components/MaliCard';
 import { MaliHeader } from '../components/MaliHeader';
+import { useAuthStore } from '../store/authStore';
+import { apiClient } from '../api/client';
 import { SkeletonLoader } from '../components/SkeletonLoader';
-import { Svg, Path, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg';
+import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
+import { MaliMeter } from '../components/MaliMeter';
+import { IntelligenceEmptyState } from '../components/IntelligenceEmptyState';
+import { LinearGradient } from 'expo-linear-gradient';
+
+const { width } = Dimensions.get('window');
 
 export const HomeScreen = () => {
+  const { t } = useTranslation();
   const { user } = useAuthStore();
+  const queryClient = useQueryClient();
   const navigation = useNavigation<any>();
-  
-  const [txModalVisible, setTxModalVisible] = useState(false);
-  const [txType, setTxType] = useState<'income' | 'expense'>('expense');
-  const [goalModalVisible, setGoalModalVisible] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [interactionsComplete, setInteractionsComplete] = useState(false);
+
+  const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const slideAnim = React.useRef(new Animated.Value(10)).current;
 
   const { data: dashboard, isLoading, refetch } = useQuery({
     queryKey: ['dashboard'],
     queryFn: async () => {
       const { data } = await apiClient.get('/users/dashboard');
-      return data;
+      return {
+        ...data,
+        safeToSpendFactors: data.safeToSpendFactors ? (typeof data.safeToSpendFactors === 'string' ? JSON.parse(data.safeToSpendFactors) : data.safeToSpendFactors) : null
+      };
     }
   });
 
-  const fadeAnim = React.useRef(new Animated.Value(0)).current;
-  const slideAnim = React.useRef(new Animated.Value(20)).current;
+  useEffect(() => {
+    const task = InteractionManager.runAfterInteractions(() => {
+      setInteractionsComplete(true);
+    });
+    return () => task.cancel();
+  }, []);
 
-  React.useEffect(() => {
-    if (!isLoading && dashboard) {
+  useEffect(() => {
+    if (!isLoading && interactionsComplete) {
       Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 800,
-          useNativeDriver: true,
-        })
+        Animated.timing(fadeAnim, { toValue: 1, duration: 350, useNativeDriver: true }),
+        Animated.timing(slideAnim, { toValue: 0, duration: 350, useNativeDriver: true })
       ]).start();
     }
-  }, [isLoading, dashboard]);
+  }, [isLoading, interactionsComplete, fadeAnim, slideAnim]);
 
-  const openTxModal = (type: 'income' | 'expense') => {
-    setTxType(type);
-    setTxModalVisible(true);
-  };
+  useEffect(() => {
+    if (!user?.id) return;
+    
+    const backendUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+    const socket = io(backendUrl);
+    
+    socket.on('connect', () => {
+      socket.emit('join_user_channel', user.id);
+    });
+
+    socket.on('dashboard_update', (payload) => {
+      queryClient.setQueryData(['dashboard'], (oldData: any) => ({
+        ...oldData,
+        ...payload,
+        safeToSpendFactors: payload.safeToSpendFactors ? (typeof payload.safeToSpendFactors === 'string' ? JSON.parse(payload.safeToSpendFactors) : payload.safeToSpendFactors) : oldData?.safeToSpendFactors
+      }));
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [user?.id, queryClient]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  }, [refetch]);
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 bg-obsidian-950">
+        <MaliHeader title={t('home.title')} />
+        <View className="p-6 gap-6">
+          <SkeletonLoader height={140} borderRadius={24} />
+          <SkeletonLoader height={100} borderRadius={24} />
+          <SkeletonLoader height={160} borderRadius={24} />
+        </View>
+      </View>
+    );
+  }
+
+  const cockpit = dashboard?.spendingCockpit;
 
   return (
-    <View 
-      className="flex-1 bg-obsidian-900 text-white"
-      style={Platform.OS === 'web' ? { minHeight: '100%', width: '100%', display: 'flex' } : {}}
-    >
-      <MaliHeader />
-      
-      <ScrollView 
+    <View className="flex-1 bg-obsidian-950">
+      <MaliHeader title={t('home.title')} />
+
+      <Animated.View 
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: 120 }}
-        showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={isLoading} tintColor="#5B2EFF" onRefresh={refetch} />}
+        style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
       >
-        <View className="px-6 gap-8 max-w-[1200px] w-full mx-auto">
-          
-           {isLoading && !dashboard ? (
-             <View className="flex-1 px-6 gap-6 pt-4">
-                <SkeletonLoader height={180} borderRadius={24} />
-                <View className="flex-row gap-4">
-                   <SkeletonLoader height={74} borderRadius={22} className="flex-1" />
-                   <SkeletonLoader height={74} borderRadius={22} className="flex-1" />
+        <ScrollView
+          className="flex-1 px-6 pt-4"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 120 }}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#5B2EFF" />}
+        >
+          {/* 1. Wallet Balance & Safe-to-Spend v4 */}
+          <View className="w-full max-w-[840px] mx-auto">
+            <View className="flex-row gap-5 mb-8">
+               <MaliCard variant="intelligence" centered={true} className="flex-1 p-8 rounded-[32px]">
+                  <Text className="text-obsidian-400 font-bold text-[10px] uppercase tracking-[2px] mb-2 text-center">{t('home.liquidCapital')}</Text>
+                  <Text className="text-white text-[32px] font-black text-center tracking-tight">
+                    {dashboard?.currency} {dashboard?.balance?.toLocaleString()}
+                  </Text>
+                  <View className="flex-row items-center gap-1.5 mt-3 opacity-60">
+                    <Ionicons name="shield-checkmark" size={12} color="#16C784" />
+                    <Text className="text-success text-[10px] font-black uppercase">Verified by Ledger</Text>
+                  </View>
+               </MaliCard>
+               
+               <LinearGradient
+                  colors={['#5B2EFF', '#A855F7']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{ borderRadius: 32, padding: 1, flex: 1 }}
+               >
+                 <MaliCard variant="intelligence" centered={true} className="flex-1 p-8 rounded-[32px] bg-obsidian-950/90 border-0">
+                    <Text className="text-primary-300 font-bold text-[10px] uppercase tracking-[2px] mb-2 text-center">{t('home.safeToSpend')}</Text>
+                    <Text className="text-white text-[32px] font-black text-center tracking-tight">
+                      {dashboard?.currency} {Math.round(dashboard?.safeToSpend || 0).toLocaleString()}
+                    </Text>
+                    <View className="flex-row items-center gap-1.5 mt-3">
+                      <Ionicons name="pulse" size={12} color="#A855F7" />
+                      <Text className="text-primary-300 text-[10px] font-black uppercase">Risk Adjusted</Text>
+                    </View>
+                 </MaliCard>
+               </LinearGradient>
+            </View>
+    
+            {/* Mali AI Explanation Card 2.0 */}
+            <MaliCard variant="glass-premium" className="mb-10 p-0 border-primary-500/20 rounded-[32px] overflow-hidden">
+              <LinearGradient
+                colors={['rgba(91, 46, 255, 0.1)', 'transparent']}
+                className="p-8"
+              >
+                <View className="flex-row items-center justify-between mb-6">
+                  <View className="flex-row items-center gap-3">
+                    <View className="w-10 h-10 rounded-2xl bg-primary-500/20 items-center justify-center">
+                       <Ionicons name="sparkles" size={18} color="#5B2EFF" />
+                    </View>
+                    <View>
+                      <Text className="text-white font-black text-[14px] uppercase tracking-widest">{t('home.maliInsight')}</Text>
+                      <Text className="text-primary-400 text-[9px] font-black uppercase tracking-widest opacity-60">Report v4.1 Native Intelligence</Text>
+                    </View>
+                  </View>
+                  <View className="bg-primary-500/20 px-3 py-1.5 rounded-xl border border-primary-500/30">
+                     <Text className="text-primary-400 font-black text-[10px] text-center uppercase tracking-widest">{t('home.risk')}: {dashboard?.riskScore}</Text>
+                  </View>
                 </View>
-                <SkeletonLoader height={140} borderRadius={24} />
-                <SkeletonLoader height={200} borderRadius={24} />
-             </View>
-           ) : (
-             <Animated.View 
-               className="gap-8"
-               style={{
-                 opacity: fadeAnim,
-                 transform: [{ translateY: slideAnim }]
-               }}
-             >
-                {/* FINANCIAL OVERVIEW (HERO) */}
-                <MaliCard variant="glass" className="mt-4 relative overflow-visible">
-                   {/* Subtle Glow Background */}
-                   <View className="absolute -top-10 -left-10 w-40 h-40 bg-primary-500/10 blur-[60px] rounded-full" />
-                   
-                   <View className="items-center py-4 z-10">
-                      <Text className="text-obsidian-300 text-[14px] font-black uppercase tracking-[3px] mb-2">Total Operating Capital</Text>
-                      <Text style={{ color: '#F9FAFB' }} className="text-white text-[48px] font-black tracking-tight">
-                         KES {dashboard?.balance?.toLocaleString() || '0'}
-                      </Text>
-                      <View className="flex-row items-center mt-6 bg-success/10 px-4 py-2 rounded-full border border-success/20">
-                         <Ionicons name="shield-checkmark" size={14} color="#39FF14" style={{ marginRight: 8 }} />
-                         <Text className="text-success text-[13px] font-black uppercase tracking-widest">KES {dashboard?.safeToSpend?.toLocaleString() || '0'} Liquid assets</Text>
-                      </View>
-                   </View>
 
-                   {/* Value Curve Visual */}
-                   <View className="absolute bottom-0 left-0 right-0 h-32 opacity-30">
-                      <Svg width="100%" height="100%" viewBox="0 0 400 100" preserveAspectRatio="none">
-                         <Defs>
-                            <SvgGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-                               <Stop offset="0" stopColor="#5B2EFF" stopOpacity="0.5" />
-                               <Stop offset="1" stopColor="#5B2EFF" stopOpacity="0" />
-                            </SvgGradient>
-                         </Defs>
-                         <Path 
-                           d="M0,80 Q50,70 100,85 T200,60 T300,75 T400,40 L400,100 L0,100 Z" 
-                           fill="url(#grad)" 
-                         />
-                         <Path 
-                           d="M0,80 Q50,70 100,85 T200,60 T300,75 T400,40" 
-                           fill="none" 
-                           stroke="#5B2EFF" 
-                           strokeWidth="2" 
-                         />
-                      </Svg>
-                   </View>
+                <MaliCard variant="elevated" className="bg-white/[0.03] border-white/5 p-6 mb-8 rounded-[24px]">
+                  <Text className="text-white text-[16px] leading-relaxed font-semibold tracking-tight">
+                    {dashboard?.lastInsight}
+                  </Text>
                 </MaliCard>
+                
+                {/* Safe-to-Spend Reasons (Explainability) */}
+                {dashboard?.safeToSpendFactors && (
+                  <View className="gap-4">
+                     {[
+                       { label: t('home.trustReason'), detail: dashboard.safeToSpendFactors.trustReason, icon: 'shield-checkmark', color: '#16C784' },
+                       { label: t('home.behaviorReason'), detail: dashboard.safeToSpendFactors.behaviorReason, icon: 'pulse', color: '#A855F7' },
+                       { label: t('home.budgetPressure'), detail: dashboard.safeToSpendFactors.pressureReason, icon: 'speedometer', color: '#F59E0B' }
+                     ].map((item, idx) => (
+                       <View key={idx} className="flex-row items-center gap-4 bg-white/[0.02] p-4 rounded-2xl border border-white/[0.04]">
+                          <View className="w-8 h-8 rounded-xl bg-white/[0.03] items-center justify-center">
+                            <Ionicons name={item.icon as any} size={14} color={item.color} />
+                          </View>
+                          <View className="flex-1">
+                            <Text className="text-obsidian-400 text-[9px] font-black uppercase tracking-widest mb-0.5">{item.label}</Text>
+                            <Text className="text-white/80 text-[12px] font-bold">{item.detail}</Text>
+                          </View>
+                       </View>
+                     ))}
+                  </View>
+                )}
+              </LinearGradient>
+            </MaliCard>
 
-                {/* QUICK ACTIONS */}
-                <View className="flex-row gap-4 flex-wrap">
-                   {[
-                     { title: 'Add Income', icon: 'add-outline', action: () => openTxModal('income') },
-                     { title: 'Add Expense', icon: 'remove-outline', action: () => openTxModal('expense') },
-                     { title: 'Synergy Circle', icon: 'people-outline', action: () => navigation.navigate('Synergy') },
-                     { title: 'Find Jobs', icon: 'briefcase-outline', action: () => navigation.navigate('Work') },
-                   ].map((btn, i) => (
-                     <TouchableOpacity 
-                       key={i}
-                       onPress={btn.action}
-                       className="flex-1 min-w-[140px] h-[74px] bg-white/[0.03] border border-white/[0.08] rounded-[22px] flex-row items-center px-5 active:bg-white/5"
-                     >
-                        <View className="w-11 h-11 bg-white/[0.05] rounded-xl items-center justify-center mr-4">
-                           <Ionicons name={btn.icon as any} size={20} color="#F3F4F6" />
+            {/* 2. Upcoming Obligations Cockpit */}
+            <View className="flex-row items-center justify-between mb-4 px-1">
+               <Text className="text-white text-[16px] font-black uppercase tracking-widest">{t('home.upcomingUtilities')}</Text>
+               <TouchableOpacity onPress={() => navigation.navigate('Wallet')}>
+                  <Text className="text-primary-500 text-[11px] font-black uppercase">{t('wallet.deposit')}</Text>
+               </TouchableOpacity>
+            </View>
+
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-10" contentContainerStyle={{ paddingHorizontal: width > 840 ? (width - 840) / 2 : 0 }}>
+              {cockpit?.upcomingUtilities?.length > 0 ? cockpit.upcomingUtilities.map((bill: any, i: number) => {
+                const daysLeft = Math.ceil((new Date(bill.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                return (
+                  <MaliCard key={i} variant="elevated" className="w-[200px] p-6 mr-4 border-white/[0.03] rounded-[28px] bg-obsidian-900 shadow-2xl">
+                     <View className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/5 items-center justify-center mb-4">
+                        <Ionicons name="receipt-outline" size={20} color="#5B2EFF" />
+                     </View>
+                     <Text className="text-white font-black text-[15px] mb-1 leading-tight" numberOfLines={1}>{bill.name}</Text>
+                     <Text className="text-obsidian-300 font-bold text-[13px]">{dashboard?.currency} {bill.amount.toLocaleString()}</Text>
+                     
+                     <View className="mt-6 pt-4 border-t border-white/[0.05]">
+                        <View className={`px-2 py-1 rounded-lg self-start ${daysLeft < 3 ? 'bg-error/10' : 'bg-primary-500/10'}`}>
+                           <Text className={`text-[9px] font-black uppercase tracking-wider ${daysLeft < 3 ? 'text-error' : 'text-primary-400'}`}>
+                              {t('home.utilityDue', { days: daysLeft })}
+                           </Text>
                         </View>
-                        <Text className="text-white font-black text-[12px] uppercase tracking-tight">{btn.title}</Text>
-                     </TouchableOpacity>
-                   ))}
+                     </View>
+                  </MaliCard>
+                );
+              }) : (
+                <View className="w-full">
+                   <IntelligenceEmptyState 
+                      icon="receipt-outline"
+                      title={t('home.noUpcomingUtilities') || "Clear Horizon"}
+                      description="No capital leaks detected. You have a zero-debt obligation window for the next cycle."
+                   />
                 </View>
+              )}
+            </ScrollView>
 
-                {/* JOB OPPORTUNITIES (HORIZONTAL) */}
-                <View>
-                   <View className="flex-row justify-between items-center mb-6 px-2">
-                      <Text className="text-white text-[22px] font-black tracking-tight uppercase">High-Yield Ops</Text>
-                      <TouchableOpacity>
-                         <Text style={{ color: '#B1B7C1' }} className="text-obsidian-300 text-[12px] font-black uppercase tracking-widest bg-transparent">Global View</Text>
-                      </TouchableOpacity>
-                   </View>
-                   
-                   <ScrollView 
-                     horizontal 
-                     showsHorizontalScrollIndicator={false} 
-                     className="-mx-6 px-6"
-                     snapToInterval={220 + 16}
-                     decelerationRate="fast"
-                   >
-                      {[
-                        { title: 'UI Architect', company: 'SpaceX', loc: 'Remote', rate: '4.8', color: '#5B2EFF' },
-                        { title: 'Fullstack Dev', company: 'Stripe', loc: 'Nairobi', rate: '5.0', color: '#8B5CF6' },
-                        { title: 'AI Specialist', company: 'Anthropic', loc: 'Remote', rate: '4.9', color: '#C0C0C0' },
-                        { title: 'Growth Lead', company: 'Revolut', loc: 'Lagos', rate: '4.7', color: '#5B2EFF' },
-                      ].map((job, i) => (
-                        <MaliCard 
-                          key={i} 
-                          variant="glass" 
-                          className="w-[220px] mr-4 border-white/[0.05] p-5"
-                        >
-                           <View style={{ backgroundColor: `${job.color}15` }} className="w-10 h-10 rounded-xl items-center justify-center mb-4">
-                              <Ionicons name="flash-outline" size={20} color={job.color} />
+            {/* 3. Savings Momentum */}
+            <Text className="text-white text-[16px] font-black mb-6 px-1 uppercase tracking-widest">{t('home.savingsMomentum')}</Text>
+            <View className="mb-10">
+              {cockpit?.savingsGoals?.length > 0 ? cockpit.savingsGoals.map((goal: any, i: number) => {
+                const progress = (goal.currentAmount / goal.targetAmount) * 100;
+                const daysLeft = Math.ceil((new Date(goal.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                return (
+                  <MaliCard key={i} variant="elevated" className="mb-5 p-6 border-white/[0.05] rounded-[28px] shadow-lg">
+                     <View className="flex-row items-center justify-between mb-6">
+                        <View className="flex-row items-center gap-4">
+                           <View className="w-12 h-12 rounded-2xl bg-success/10 border border-success/20 items-center justify-center">
+                              <Ionicons name="trending-up" size={20} color="#16C784" />
                            </View>
-                           <Text className="text-white font-black text-[16px] mb-1">{job.title}</Text>
-                           <Text className="text-obsidian-300 text-[13px] font-medium mb-4">{job.company}</Text>
-                           
-                           <View className="flex-row justify-between items-center mt-auto">
-                              <View className="flex-row items-center">
-                                 <Ionicons name="location-outline" size={12} color="#9CA3AF" />
-                                 <Text className="text-obsidian-300 text-[12px] font-bold ml-1">{job.loc}</Text>
-                              </View>
-                              <View className="flex-row items-center border border-white/10 px-2 py-0.5 rounded-lg">
-                                 <Ionicons name="star" size={10} color="#5B2EFF" />
-                                 <Text className="text-white text-[11px] font-bold ml-1">{job.rate}</Text>
-                              </View>
+                           <View>
+                              <Text className="text-white font-black text-[15px] tracking-tight">{goal.name}</Text>
+                              <Text className="text-obsidian-400 text-[10px] font-bold uppercase tracking-widest">{t('home.daysRemaining', { days: daysLeft })}</Text>
                            </View>
-                        </MaliCard>
-                      ))}
-                      <View className="w-6" />
-                   </ScrollView>
-                </View>
+                        </View>
+                        <View className="items-end">
+                           <Text className="text-white font-black text-[16px]">{dashboard?.currency} {goal.currentAmount.toLocaleString()}</Text>
+                           <Text className="text-obsidian-400 text-[9px] font-bold uppercase">Target: {goal.targetAmount.toLocaleString()}</Text>
+                        </View>
+                     </View>
+                     
+                     <MaliMeter 
+                        progress={progress} 
+                        variant="success" 
+                        size="md"
+                        subLabel={t('home.goalProgress', { progress: Math.round(progress) })}
+                     />
+                  </MaliCard>
+                );
+              }) : (
+                <IntelligenceEmptyState 
+                   icon="trending-up-outline"
+                   title={t('home.noSavingsGoals') || "Liquid Stagnation"}
+                   description="No dedicated capital growth engines found. Consider seeding a new savings circle for automated compounding."
+                   actionLabel="Set Growth Goal"
+                />
+              )}
+            </View>
 
-                {/* SMART SYNERGY CIRCLE */}
-                <MaliCard variant="elevated" className="border-white/[0.05] p-8">
-                   <View className="flex-row justify-between items-center mb-8">
-                      <View>
-                         <Text className="text-obsidian-300 text-[11px] font-black uppercase tracking-[3px] mb-2">Sync Circle Pool</Text>
-                         <Text style={{ color: '#F9FAFB' }} className="text-white text-[32px] font-black tracking-tighter">KES 240,500</Text>
-                      </View>
-                      <View className="flex-row -space-x-3">
-                         {[1, 2, 3].map(i => (
-                           <View key={i} className="w-9 h-9 rounded-full border-2 border-obsidian-900 bg-obsidian-800 items-center justify-center shadow-lg">
-                              <Ionicons name="person-outline" size={16} color="#B1B7C1" />
-                           </View>
-                         ))}
-                         <View className="w-9 h-9 rounded-full border-2 border-obsidian-900 bg-primary-500 items-center justify-center shadow-lg">
-                            <Text className="text-white text-[10px] font-black">+12</Text>
-                         </View>
-                      </View>
-                   </View>
-                   
-                   <View className="gap-3">
-                      <View className="flex-row justify-between items-center">
-                         <Text className="text-obsidian-300 text-[12px] font-bold uppercase tracking-widest">Liquidity target</Text>
-                         <Text className="text-white text-[14px] font-black">85%</Text>
-                      </View>
-                      <View className="h-2 w-full bg-white/[0.05] rounded-full overflow-hidden border border-white/5">
-                         <View className="h-full bg-primary-500 shadow-[0_0_20px_#5B2EFF]" style={{ width: '85%' }} />
-                      </View>
-                   </View>
-                </MaliCard>
+            {/* 4. Category Pressure Meters */}
+            <Text className="text-white text-[16px] font-black mb-6 px-1 uppercase tracking-widest">{t('home.budgetPressure')}</Text>
+            <View className="flex-row flex-wrap gap-5 mb-12">
+              {cockpit?.categories?.map((cat: any, i: number) => {
+                const progress = (cat.spent / cat.limit) * 100;
+                const isOver = cat.spent >= cat.limit;
+                return (
+                  <MaliCard key={i} variant="surface" className="flex-1 min-w-[160px] p-6 border-white/[0.05] rounded-[28px] shadow-sm">
+                     <View className="flex-row justify-between items-start mb-4">
+                        <Text className="text-obsidian-400 font-bold text-[10px] uppercase tracking-widest flex-1" numberOfLines={1}>{cat.name}</Text>
+                        {isOver && <Ionicons name="warning" size={14} color="#FF4D4D" />}
+                     </View>
+                     
+                     <MaliMeter 
+                        progress={progress} 
+                        variant={isOver ? 'error' : 'primary'} 
+                        size="sm"
+                        subLabel={`${Math.round(progress)}%`}
+                     />
+                     
+                     <View className="mt-4 pt-3 border-t border-white/[0.02] flex-row justify-between items-center">
+                        <Text className="text-white font-black text-[13px]">{dashboard?.currency} {cat.spent.toLocaleString()}</Text>
+                        <Text className="text-obsidian-500 text-[9px] font-bold">Of {cat.limit.toLocaleString()}</Text>
+                     </View>
+                  </MaliCard>
+                );
+              })}
+            </View>
 
-                {/* AI INSIGHT (FLOATING GLASS) */}
-                <MaliCard variant="glass" className="border-primary-500/30 bg-primary-500/[0.05] p-8">
-                   <View className="flex-row items-start gap-5">
-                      <View className="w-14 h-14 bg-primary-500 rounded-2xl items-center justify-center shadow-xl shadow-primary-500/40">
-                         <Ionicons name="sparkles" size={28} color="white" />
-                      </View>
-                      <View className="flex-1">
-                         <Text className="text-white font-black text-[18px] mb-1 tracking-tight">Elite Insight</Text>
-                         <Text className="text-obsidian-300 text-[15px] leading-relaxed font-medium">
-                            Optimize your <Text className="text-success font-black">Synergy Circle</Text> yields by diversifying contributions this cycle.
-                         </Text>
-                      </View>
-                      <TouchableOpacity className="w-10 h-10 items-center justify-center bg-white/5 rounded-xl border border-white/10">
-                         <Ionicons name="chevron-forward" size={20} color="#F3F4F6" />
-                      </TouchableOpacity>
-                   </View>
-                </MaliCard>
+            {/* Existing Synergies Link (Bottom) */}
+            <TouchableOpacity onPress={() => navigation.navigate('Synergy')} className="active:opacity-80">
+               <MaliCard variant="intelligence" className="mb-6 p-6 border-white/[0.05] rounded-[28px] flex-row items-center justify-between shadow-2xl">
+                  <View className="flex-row items-center">
+                    <View className="w-12 h-12 bg-white/5 border border-white/10 rounded-2xl items-center justify-center mr-4">
+                       <Ionicons name="git-network" size={24} color="#5B2EFF" />
+                    </View>
+                    <View>
+                       <Text className="text-white font-black text-[16px] tracking-tight">{t('home.activeSynergies')}</Text>
+                       <Text className="text-primary-400 text-[11px] font-bold uppercase tracking-widest">{dashboard?.activeSynergies?.length || 0} Network Pools Active</Text>
+                    </View>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="#51525C" />
+               </MaliCard>
+            </TouchableOpacity>
+          </View>
 
-             </Animated.View>
-           )}
-        </View>
-      </ScrollView>
-
-      <AddTransactionModal 
-        visible={txModalVisible} 
-        defaultType={txType}
-        onClose={() => setTxModalVisible(false)} 
-      />
-      <AddGoalModal 
-        visible={goalModalVisible} 
-        onClose={() => setGoalModalVisible(false)} 
-      />
+        </ScrollView>
+      </Animated.View>
     </View>
   );
 };

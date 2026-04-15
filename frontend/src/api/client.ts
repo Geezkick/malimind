@@ -22,3 +22,15 @@ apiClient.interceptors.request.use((config) => {
   }
   return config;
 });
+
+// Response interceptor to unwrap standardized backend response
+apiClient.interceptors.response.use(
+  (response) => {
+    // If the response follows the standardized { data, statusCode, ... } format, unwrap it
+    if (response.data && response.data.data !== undefined) {
+      return { ...response, data: response.data.data };
+    }
+    return response;
+  },
+  (error) => Promise.reject(error)
+);

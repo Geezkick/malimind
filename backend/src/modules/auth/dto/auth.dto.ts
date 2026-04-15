@@ -30,3 +30,14 @@ export class LoginDto {
   @IsString()
   password: string;
 }
+
+export class SocialAuthDto {
+  @ApiProperty({ description: 'ID token or access token from provider' })
+  @IsString()
+  token: string;
+
+  @ApiProperty({ description: 'User display name (may be sent by Apple on first sign-in)', required: false })
+  @IsOptional()
+  @IsString()
+  name?: string;
+}

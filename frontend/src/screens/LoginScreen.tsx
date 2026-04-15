@@ -7,17 +7,20 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  TouchableOpacity,
   Animated,
 } from 'react-native';
-import { Svg, Path, Circle, Defs, LinearGradient as SvgGradient, Stop, G } from 'react-native-svg';
+import { Svg, Path } from 'react-native-svg';
 import { useAuthStore } from '../store/authStore';
 import { apiClient } from '../api/client';
 import { Ionicons } from '@expo/vector-icons';
 import { MaliButton } from '../components/MaliButton';
+import { MaliPressable } from '../components/MaliPressable';
 import { MalimindLogo } from '../components/MalimindLogo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
+import { useGoogleAuth } from '../hooks/useGoogleAuth';
+import { useAppleAuth } from '../hooks/useAppleAuth';
+
 
 // Real Google "G" SVG icon with official brand colors
 const GoogleIcon = ({ size = 20 }: { size?: number }) => (
@@ -53,6 +56,10 @@ export const LoginScreen = () => {
   const login = useAuthStore((state) => state.login);
   const insets = useSafeAreaInsets();
 
+  const googleAuth = useGoogleAuth();
+  const appleAuth = useAppleAuth();
+
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
 
@@ -71,7 +78,6 @@ export const LoginScreen = () => {
       else Alert.alert('Required Fields', msg);
       return;
     }
-    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setLoading(true);
     try {
       if (isLogin) {
@@ -91,15 +97,22 @@ export const LoginScreen = () => {
     }
   };
 
-  const handleSocialAuth = (provider: string) => {
-    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const msg = `${provider} sign-in is being configured.`;
-    if (Platform.OS === 'web') alert(msg);
-    else Alert.alert('Coming Soon', msg);
+  const handleSocialAuth = async (provider: string) => {
+    try {
+      if (provider === 'Google') {
+        await googleAuth.signIn();
+      } else if (provider === 'Apple') {
+        await appleAuth.signIn();
+      }
+    } catch (error: any) {
+      const msg = error.message || `${provider} authentication failed.`;
+      if (Platform.OS === 'web') alert(msg);
+      else Alert.alert('Authentication Error', msg);
+    }
   };
 
+
   const switchMode = () => {
-    if (Platform.OS !== 'web') Haptics.selectionAsync();
     setIsLogin(!isLogin);
   };
 
@@ -162,6 +175,9 @@ export const LoginScreen = () => {
               borderColor: 'rgba(255,255,255,0.06)',
               borderRadius: 28,
               padding: 28,
+              width: '100%',
+              maxWidth: 450,
+              alignSelf: 'center',
             }}>
 
               {/* Heading */}
@@ -216,9 +232,9 @@ export const LoginScreen = () => {
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, marginHorizontal: 2 }}>
                   <Text style={{ color: '#6B7280', fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1.5 }}>Password</Text>
                   {isLogin && (
-                    <TouchableOpacity>
+                    <MaliPressable haptic="none">
                       <Text style={{ color: '#5B2EFF', fontSize: 12, fontWeight: '700' }}>Forgot password?</Text>
-                    </TouchableOpacity>
+                    </MaliPressable>
                   )}
                 </View>
                 <View style={inputStyle('password')}>
@@ -233,18 +249,18 @@ export const LoginScreen = () => {
                     onBlur={() => setFocusedInput(null)}
                     secureTextEntry={!showPassword}
                   />
-                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ padding: 4 }}>
+                  <MaliPressable onPress={() => setShowPassword(!showPassword)} style={{ padding: 4 }}>
                     <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={17} color="#4B5563" />
-                  </TouchableOpacity>
+                  </MaliPressable>
                 </View>
               </View>
 
               {/* Primary CTA */}
               <MaliButton
                 variant="glow"
-                title={loading ? 'Please wait...' : isLogin ? 'Sign In' : 'Create Account'}
+                title="Sign In"
                 onPress={handleAuth}
-                disabled={loading}
+                loading={loading}
               />
 
               {/* Divider */}
@@ -257,25 +273,29 @@ export const LoginScreen = () => {
               {/* Social Buttons */}
               <View style={{ flexDirection: 'row', gap: 12 }}>
                 {/* Apple – white pill, iOS native style */}
-                <TouchableOpacity
+                <MaliPressable
                   onPress={() => handleSocialAuth('Apple')}
-                  activeOpacity={0.85}
+                  disabled={appleAuth.loading}
                   style={{
                     flex: 1, height: 52,
                     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
                     backgroundColor: '#FFFFFF',
                     borderRadius: 14,
                     shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 10, elevation: 6,
+                    opacity: appleAuth.loading ? 0.5 : 1,
                   }}
                 >
                   <Ionicons name="logo-apple" size={20} color="#000000" />
-                  <Text style={{ color: '#000000', fontWeight: '700', fontSize: 15, letterSpacing: -0.3 }}>Apple</Text>
-                </TouchableOpacity>
+                  <Text style={{ color: '#000000', fontWeight: '700', fontSize: 15, letterSpacing: -0.3 }}>
+                    {appleAuth.loading ? '...' : 'Apple'}
+                  </Text>
+                </MaliPressable>
+
 
                 {/* Google – dark pill with real G icon */}
-                <TouchableOpacity
+                <MaliPressable
                   onPress={() => handleSocialAuth('Google')}
-                  activeOpacity={0.85}
+                  disabled={googleAuth.loading || googleAuth.disabled}
                   style={{
                     flex: 1, height: 52,
                     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -283,22 +303,26 @@ export const LoginScreen = () => {
                     borderWidth: 1,
                     borderColor: 'rgba(255,255,255,0.1)',
                     borderRadius: 14,
+                    opacity: (googleAuth.loading || googleAuth.disabled) ? 0.5 : 1,
                   }}
                 >
                   <GoogleIcon size={20} />
-                  <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 15, letterSpacing: -0.3 }}>Google</Text>
-                </TouchableOpacity>
+                  <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 15, letterSpacing: -0.3 }}>
+                    {googleAuth.loading ? '...' : 'Google'}
+                  </Text>
+                </MaliPressable>
               </View>
 
+
               {/* Switch mode */}
-              <TouchableOpacity onPress={switchMode} style={{ marginTop: 24, alignItems: 'center' }}>
+              <MaliPressable onPress={switchMode} style={{ marginTop: 24, alignItems: 'center' }}>
                 <Text style={{ color: '#6B7280', fontSize: 14 }}>
                   {isLogin ? "Don't have an account?  " : 'Already have an account?  '}
                   <Text style={{ color: '#5B2EFF', fontWeight: '700' }}>
                     {isLogin ? 'Sign up' : 'Sign in'}
                   </Text>
                 </Text>
-              </TouchableOpacity>
+              </MaliPressable>
             </View>
           </Animated.View>
 

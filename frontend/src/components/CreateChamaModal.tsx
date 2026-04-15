@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, Modal, TextInput, TouchableOpacity, ScrollView, Platform, KeyboardAvoidingView, Alert } from 'react-native';
+import { View, Text, Modal, TextInput, ScrollView, Platform, KeyboardAvoidingView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MaliButton } from './MaliButton';
+import { MaliPressable } from './MaliPressable';
 import { useToast } from './ToastProvider';
 import { apiClient } from '../api/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -12,16 +13,16 @@ interface CreateChamaModalProps {
   onSuccess: () => void;
 }
 
-export const CreateChamaModal: React.FC<CreateChamaModalProps> = ({ 
-  visible, 
-  onClose, 
-  onSuccess 
+export const CreateChamaModal: React.FC<CreateChamaModalProps> = ({
+  visible,
+  onClose,
+  onSuccess
 }) => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [targetAmount, setTargetAmount] = useState('');
   const [frequency, setFrequency] = useState('monthly');
-  
+
   const queryClient = useQueryClient();
   const { showToast } = useToast();
 
@@ -59,7 +60,7 @@ export const CreateChamaModal: React.FC<CreateChamaModalProps> = ({
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1 justify-end bg-obsidian-900/60"
       >
@@ -69,12 +70,12 @@ export const CreateChamaModal: React.FC<CreateChamaModalProps> = ({
               <Text className="text-white text-[24px] font-black tracking-tight">New Synergy Circle</Text>
               <Text className="text-obsidian-300 text-[13px] font-medium mt-1">Initialize a collective capital protocol.</Text>
             </View>
-            <TouchableOpacity 
-              onPress={() => { reset(); onClose(); }} 
+            <MaliPressable
+              onPress={() => { reset(); onClose(); }}
               className="w-12 h-12 bg-white/[0.03] rounded-2xl items-center justify-center border border-white/[0.08]"
             >
               <Ionicons name="close" size={20} color="#F3F4F6" />
-            </TouchableOpacity>
+            </MaliPressable>
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false}>
@@ -113,15 +114,15 @@ export const CreateChamaModal: React.FC<CreateChamaModalProps> = ({
               <View>
                 <Text className="text-white/40 text-[11px] font-black uppercase tracking-[3px] mb-3 ml-1">Contribution Frequency</Text>
                 <View className="flex-row gap-3">
-                   {['daily', 'weekly', 'monthly'].map(f => (
-                     <TouchableOpacity 
-                       key={f}
-                       onPress={() => setFrequency(f)}
-                       className={`flex-1 py-4 rounded-2xl items-center border ${frequency === f ? 'bg-primary-500 border-primary-500' : 'bg-white/[0.02] border-white/[0.05]'}`}
-                     >
-                        <Text className={`text-[10px] font-black uppercase tracking-widest ${frequency === f ? 'text-white' : 'text-obsidian-300'}`}>{f}</Text>
-                     </TouchableOpacity>
-                   ))}
+                  {['daily', 'weekly', 'monthly'].map(f => (
+                    <MaliPressable
+                      key={f}
+                      onPress={() => setFrequency(f)}
+                      className={`flex-1 py-4 rounded-2xl items-center border ${frequency === f ? 'bg-primary-500 border-primary-500' : 'bg-white/[0.02] border-white/[0.05]'}`}
+                    >
+                      <Text className={`text-[10px] font-black uppercase tracking-widest ${frequency === f ? 'text-white' : 'text-obsidian-300'}`}>{f}</Text>
+                    </MaliPressable>
+                  ))}
                 </View>
               </View>
 
@@ -140,7 +141,7 @@ export const CreateChamaModal: React.FC<CreateChamaModalProps> = ({
               </View>
             </View>
 
-            <MaliButton 
+            <MaliButton
               title={isPending ? "Generating Protocol..." : "Activate Synergy Circle"}
               onPress={() => mutate()}
               disabled={isPending}

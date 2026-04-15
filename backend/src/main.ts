@@ -17,6 +17,7 @@ async function bootstrap() {
   // your deployed frontend domain only.
   const allowedOrigins = [
     'http://localhost:8081',
+    'http://localhost:8082',
     'http://localhost:3000',
     'http://localhost:19006',
     'exp://192.168.100.36:8081',
@@ -27,6 +28,12 @@ async function bootstrap() {
     origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
       // Allow requests with no origin (e.g., mobile apps, Postman)
       if (!origin) return callback(null, true);
+      
+      // In development, allow any localhost origin for easier testing
+      if (process.env.NODE_ENV !== 'production' && origin.includes('localhost')) {
+        return callback(null, true);
+      }
+
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }

@@ -20,15 +20,15 @@ export const MalimindLogo: React.FC<MalimindLogoProps> = ({
   variant = 'full',
   color,
 }) => {
-  // vbW expanded to 260 to prevent clipping of the 'd'
-  const vbW = 260;
+  // vbW expanded to 320 to prevent clipping of the 'd'
+  const vbW = 320;
   const vbH = variant === 'full' ? 84 : 60;
   const height = (width / vbW) * vbH;
 
   const primary = color || '#5B2EFF'; // Elite Violet
   const secondary = '#FFFFFF'; // Pure White
 
-  // The "Architectural M" — Single M with Silver-Violet Blend
+  // The "Triple M" Signature — Three overlapping Architectural M shapes
   const ArchitecturalMark = () => (
     <G>
       <Defs>
@@ -48,34 +48,23 @@ export const MalimindLogo: React.FC<MalimindLogoProps> = ({
         </RadialGradient>
       </Defs>
 
-      {/* 1. Underlying Shadow Path */}
-      <Path
-        d="M2 36 L12 14 L22 36 L32 14 L42 36"
-        fill="none"
-        stroke="rgba(0,0,0,0.5)"
-        strokeWidth="8.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        transform="translate(1.5, 2)"
-      />
-      
-      {/* 2. Fusion Surface Stroke (Silver + Violet) */}
-      <Path
-        d="M2 36 L12 14 L22 36 L32 14 L42 36"
-        fill="none"
-        stroke="url(#fusionGrad)"
-        strokeWidth="8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+      {/* 1. Underlying Shadow Paths (Triple M) */}
+      <Path d="M2 36 L12 14 L22 36 L32 14 L42 36" fill="none" stroke="rgba(0,0,0,0.5)" strokeWidth="8.5" strokeLinecap="round" strokeLinejoin="round" transform="translate(1.5, 2)" />
+      <Path d="M7 36 L17 14 L27 36 L37 14 L47 36" fill="none" stroke="rgba(0,0,0,0.5)" strokeWidth="8.5" strokeLinecap="round" strokeLinejoin="round" transform="translate(1.5, 2)" />
+      <Path d="M12 36 L22 14 L32 36 L42 14 L52 36" fill="none" stroke="rgba(0,0,0,0.5)" strokeWidth="8.5" strokeLinecap="round" strokeLinejoin="round" transform="translate(1.5, 2)" />
+
+      {/* 2. Fusion Surface Strokes (Triple M) */}
+      <Path d="M2 36 L12 14 L22 36 L32 14 L42 36" fill="none" stroke="url(#fusionGrad)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M7 36 L17 14 L27 36 L37 14 L47 36" fill="none" stroke="url(#fusionGrad)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
+      <Path d="M12 36 L22 14 L32 36 L42 14 L52 36" fill="none" stroke="url(#fusionGrad)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" opacity="0.7" />
 
       {/* ── THE INTELLIGENCE CORE ── */}
-      <G transform="translate(22, 36)">
-         {/* Outer Ambient Glow */}
-         <Circle r="14" fill="url(#violetGlow)" opacity="0.6" />
-         {/* Inner Hot Node */}
-         <Circle r="4" fill={primary} opacity="0.5" />
-         <Circle r="2.8" fill="#FFFFFF" />
+      <G transform="translate(27, 36)">
+        {/* Outer Ambient Glow */}
+        <Circle r="14" fill="url(#violetGlow)" opacity="0.6" />
+        {/* Inner Hot Node */}
+        <Circle r="4" fill={primary} opacity="0.5" />
+        <Circle r="2.8" fill="#FFFFFF" />
       </G>
     </G>
   );
@@ -83,8 +72,8 @@ export const MalimindLogo: React.FC<MalimindLogoProps> = ({
   if (variant === 'icon') {
     return (
       <View style={{ width, height: width }}>
-        <Svg width={width} height={width} viewBox="-2 10 48 32">
-           <ArchitecturalMark />
+        <Svg width={width} height={width} viewBox="-2 10 58 32">
+          <ArchitecturalMark />
         </Svg>
       </View>
     );
@@ -95,24 +84,24 @@ export const MalimindLogo: React.FC<MalimindLogoProps> = ({
       <Svg width={width} height={height} viewBox={`0 0 ${vbW} ${vbH}`}>
         {/* ── THE SIGNATURE MARK ── */}
         <G transform="translate(10, 20)">
-           <ArchitecturalMark />
+          <ArchitecturalMark />
         </G>
 
         {/* ── THE WORDMARK ── */}
         <SvgText
-          x="72"
+          x="82"
           y="60"
-          fontSize="48"
+          fontSize="54"
           fontWeight="900"
-          letterSpacing="-4.2"
+          letterSpacing="-4.5"
           fontFamily="System"
         >
           <TSpan fill={secondary}>mali</TSpan>
           <TSpan fill={primary}>mind</TSpan>
         </SvgText>
-        
-        {/* Structural Precision Line */}
-        <Path d="M72 70h140" stroke="rgba(255,255,255,0.1)" strokeWidth="1.2" />
+
+        {/* Structural Precision Line (Only under "mali") */}
+        <Path d="M82 70h100" stroke={primary} strokeWidth="1.5" />
       </Svg>
     </View>
   );

@@ -14,25 +14,28 @@ model User {
   password  String
   phone     String?
   avatar    String?
-  latitude  Float?   // For location-based matching
-  longitude Float?   // For location-based matching
+  latitude  Float? // For location-based matching
+  longitude Float? // For location-based matching
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  wallet         Wallet?
-  transactions   Transaction[]
-  goals          Goal[]
-  chamaMembers   ChamaMember[]
-  contributions  Contribution[]
-  aiInteractions AIInteraction[]
-  ownedChamas    Chama[]        @relation("ChamaOwner")
+  subscription    SubscriptionTier @default(FREE)
+
+  wallet        Wallet?
+  transactions  Transaction[]
+  chamaMembers  ChamaMember[]
+  contributions Contribution[]
+  aiMessages    AIMessage[]
+  insights      IntelligenceInsight[]
+  aiState         AIState?
+  financialMemory UserFinancialMemory?
+  subscriptions   Subscription[]
+  settings        UserSettings?
+  ownedChamas     Chama[]               @relation("ChamaOwner")
   
-  // New Marketplace relations
-  skillProfile   SkillProfile?
-  jobsPosted     Job[]          @relation("Employer")
-  applications   Application[]
-  ratings        UserRating[]   @relation("TargetUser")
-  givenRatings   UserRating[]   @relation("Reviewer")
+  spendingCategories SpendingCategory[]
+  utilityBills       UtilityBill[]
+  savingsGoals      SavingsGoal[]
 }
 
 model Wallet {
@@ -49,48 +52,39 @@ model Wallet {
 model Transaction {
   id        String          @id @default(uuid())
   userId    String
-  type      TransactionType
-  amount    Float
-  category  String
-  note      String?
-  createdAt DateTime        @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model Goal {
-  id            String    @id @default(uuid())
-  userId        String
-  title         String
-  targetAmount  Float
-  currentAmount Float     @default(0)
-  deadline      DateTime
-  emoji         String?   @default("🎯")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  type        TransactionType
+  amount      Float
+  category    String
+  note        String?
+  referenceId String?         @unique
+  createdAt   DateTime        @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Chama {
-  id          String   @id @default(uuid())
-  name        String
-  ownerId     String
-  inviteCode  String   @unique
-  description String?
+  id           String   @id @default(uuid())
+  name         String
+  ownerId      String
+  inviteCode   String   @unique
+  description  String?
   targetAmount Float?
-  frequency   String   @default("monthly")
-  createdAt   DateTime @default(now())
+  frequency    String   @default("monthly")
+  createdAt    DateTime @default(now())
 
-  owner         User          @relation("ChamaOwner", fields: [ownerId], references: [id])
+  owner         User           @relation("ChamaOwner", fields: [ownerId], references: [id])
   members       ChamaMember[]
   contributions Contribution[]
+  wallet        ChamaWallet?
 }
 
 model ChamaMember {
-  id       String @id @default(uuid())
+  id       String   @id @default(uuid())
   userId   String
   chamaId  String
+  trustScore        Int      @default(100)
+  trustLevel        String   @default("High")
+  behavioralInsight String?
   joinedAt DateTime @default(now())
 
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -111,69 +105,66 @@ model Contribution {
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// EVOLVED Job system
-model Job {
-  id          String      @id @default(uuid())
-  title       String
-  description String
-  category    String
-  location    String?
-  latitude    Float?
-  longitude   Float?
-  budget      Float       @default(0)
-  employerId  String
-  status      JobStatus   @default(open)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-
-  employer     User          @relation("Employer", fields: [employerId], references: [id])
-  applications Application[]
-}
-
-model SkillProfile {
-  id         String   @id @default(uuid())
-  userId     String   @unique
-  title      String
-  skills     String?  // Stored as comma separated or simple string for now
-  hourlyRate Float?
-  location   String?
-  latitude   Float?
-  longitude  Float?
-  rating     Float    @default(0)
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model Application {
-  id        String            @id @default(uuid())
-  jobId     String
-  userId    String
-  status    ApplicationStatus @default(pending)
-  createdAt DateTime          @default(now())
-
-  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model UserRating {
-  id           String   @id @default(uuid())
-  targetUserId String
-  reviewerId   String
-  rating       Int      @default(5)
-  review       String?
-  createdAt    DateTime @default(now())
-
-  targetUser User @relation("TargetUser", fields: [targetUserId], references: [id], onDelete: Cascade)
-  reviewer   User @relation("Reviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
-}
-
-model AIInteraction {
+model AIMessage {
   id        String   @id @default(uuid())
   userId    String
-  prompt    String
-  response  String
-  tokens    Int?
+  role      String // user, assistant, system
+  content   String
+  threadId  String? // To group messages
+  toolCalls Json? // To store function calling metadata
   createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model IntelligenceInsight {
+  id          String   @id @default(uuid())
+  userId      String
+  type        String // e.g., 'financial_tip', 'velocity_warning', 'opportunity'
+  title       String
+  content     String
+  actionLabel String?
+  actionPath  String?
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ChamaWallet {
+  id        String   @id @default(uuid())
+  chamaId   String   @unique
+  balance   Float    @default(0)
+  currency  String   @default("KES")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  chama Chama @relation(fields: [chamaId], references: [id], onDelete: Cascade)
+}
+
+model AIState {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  riskScore              Int      @default(50)
+  safeToSpend            Float    @default(0)
+  lastInsight            String?
+  projectedDepletionDate DateTime?
+  cashflowVelocity       Float?
+  safeToSpendFactors     String?  // JSON breakdown of the v3 formula
+  lastComputedAt         DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserFinancialMemory {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  avgSpending  Float    @default(0)    // Weighted average daily spend
+  volatility   Float    @default(0)    // Standard deviation of spending (normalized)
+  consistency  Float    @default(100)  // Contribution consistency 0-100
+  riskTrend    String   @default("stable") // 'improving', 'stable', 'deteriorating'
+  riskHistory  String?  // JSON array of past riskScores (max 30)
+  lastUpdated  DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -183,15 +174,92 @@ enum TransactionType {
   expense
 }
 
-enum JobStatus {
-  open
-  in_progress
-  completed
-  closed
+enum SubscriptionTier {
+  FREE
+  PREMIUM
 }
 
-enum ApplicationStatus {
-  pending
-  accepted
-  rejected
+enum SubscriptionStatus {
+  ACTIVE
+  GRACE_PERIOD
+  EXPIRED
+}
+
+enum AIBehaviorMode {
+  NORMAL
+  STRICT
+  ADVISORY
+}
+
+model Subscription {
+  id                 String             @id @default(uuid())
+  userId             String
+  tier               SubscriptionTier   @default(PREMIUM)
+  status             SubscriptionStatus @default(ACTIVE)
+  startsAt           DateTime           @default(now())
+  renewsAt           DateTime
+  gracePeriodEndsAt  DateTime?
+  mpesaReceiptId     String?            @unique
+  amountPaid         Float              @default(299)
+  createdAt          DateTime           @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model UserSettings {
+  id                 String         @id @default(uuid())
+  userId             String         @unique
+  language           String         @default("en") // "en" | "sw"
+  aiBehaviorMode     AIBehaviorMode @default(NORMAL)
+  fraudShieldEnabled Boolean        @default(true)
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SpendingCategory {
+  id               String   @id @default(uuid())
+  userId           String
+  name             String   // e.g., Food, Transport, Rent, Entertainment
+  limit            Float
+  spent            Float    @default(0)
+  resetPeriod      String   @default("monthly") // daily, weekly, monthly
+  warningThreshold Float    @default(0.8)       // percentage (0.8 = 80%)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+}
+
+model UtilityBill {
+  id          String   @id @default(uuid())
+  userId      String
+  name        String   // e.g., Rent, Electricity, Water, Internet
+  amount      Float
+  dueDate     DateTime
+  status      String   @default("UNPAID") // UNPAID, PAID
+  overdueRisk String   @default("NONE")   // NONE, LOW, MEDIUM, HIGH
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+}
+
+model SavingsGoal {
+  id                  String   @id @default(uuid())
+  userId              String
+  name                String
+  targetAmount        Float
+  currentAmount       Float    @default(0)
+  deadline            DateTime
+  priority            String   @default("MEDIUM") // LOW, MEDIUM, HIGH
+  predictionLikelihood Float    @default(100)       // Percentage probability
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
 }

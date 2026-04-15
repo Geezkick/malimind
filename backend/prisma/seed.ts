@@ -21,68 +21,53 @@ async function main() {
           balance: 154000,
         }
       },
-      goals: {
-        create: [
-          {
-            title: 'Macbook Pro',
-            targetAmount: 250000,
-            currentAmount: 150000,
-            emoji: '💻',
-            deadline: new Date('2026-12-31')
-          },
-          {
-             title: 'Emergency Fund',
-             targetAmount: 500000,
-             currentAmount: 125000,
-             emoji: '🏦',
-             deadline: new Date('2027-06-30')
-          }
-        ]
+      aiState: {
+        create: {
+           riskScore: 85,
+           safeToSpend: 154000,
+           lastInsight: 'Capital is healthy. Perfect condition for secondary wealth allocation.'
+        }
       }
     }
   });
 
   console.log('✅ Seeded User: john@example.com / password123');
 
-  // Gigs / Jobs
-  const jobs = [
-    {
-      title: 'Freelance Software Developer',
-      description: 'Build a simple MVP for a startup. React Native and Node.js.',
-      category: 'Development',
-      location: 'Remote',
-      budget: 75000,
-      employerId: user.id,
-    },
-    {
-      title: 'Delivery Rider',
-      description: 'Full-time delivery rider around Nairobi CBD.',
-      category: 'Logistics',
-      location: 'Nairobi',
-      budget: 25000,
-      employerId: user.id,
-    },
-    {
-      title: 'Graphic Designer',
-      description: 'Create a logo and branding for a new fintech app.',
-      category: 'Design',
-      location: 'Remote',
-      budget: 15000,
-      employerId: user.id,
-    },
-  ];
+  // Chama
+  const chama = await prisma.chama.create({
+    data: {
+      name: 'Alpha Capital Syndicate',
+      ownerId: user.id,
+      inviteCode: 'ALPHA123',
+      description: 'Strategic group capital accumulation',
+      targetAmount: 500000,
+      wallet: {
+         create: { balance: 0 }
+      }
+    }
+  });
 
-  // Try to clear jobs - but wrap in try/catch in case model isn't generated yet or table doesn't exist
-  try {
-     await (prisma as any).job.deleteMany();
-     console.log('Cleared old jobs');
-  } catch(e) {}
+  await prisma.chamaMember.create({
+    data: {
+      userId: user.id,
+      chamaId: chama.id
+    }
+  });
 
-  for (const job of jobs) {
-    await (prisma as any).job.create({ data: job });
-  }
+  console.log('✅ Seeded Synergy Pool: Alpha Capital Syndicate');
 
-  console.log('✅ Seeded Jobs');
+  // Create some transactions
+  await prisma.transaction.create({
+    data: {
+      userId: user.id,
+      type: 'income',
+      amount: 40000,
+      category: 'Deposit',
+      note: 'Initial Bank Transfer',
+    }
+  });
+
+  console.log('✅ Seeded Transactions');
 }
 
 main()
